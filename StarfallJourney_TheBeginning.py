@@ -14,7 +14,7 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Starfall Journey')
 
 nave_image = pygame.image.load('maninhoV1.png')
-nave_image = pygame.transform.scale(nave_image,(150,150))
+nave_image = pygame.transform.scale(nave_image,(60,70))
 
 color_transition = [
     (0, 0, 128),     # Navy Blue
@@ -70,7 +70,7 @@ class Asteroide(pygame.sprite.Sprite):
         self.position = pygame.math.Vector2(x, y)
         self.speed = 5
         self.image = pygame.image.load('pixel_star.png')
-        self.image = pygame.transform.scale(self.image, (200, 200))
+        self.image = pygame.transform.scale(self.image, (30, 30))
         
         self.rect = self.image.get_rect()
         self.rect.center = self.position
@@ -109,7 +109,7 @@ def main():
                 
         keys = pygame.key.get_pressed()
 
-        #collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
+        collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
 
         all_sprites.update()
 
