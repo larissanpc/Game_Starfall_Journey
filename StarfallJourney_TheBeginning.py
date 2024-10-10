@@ -44,9 +44,13 @@ class NaveEspacial(pygame.sprite.Sprite):
         self.speed = 5 # velocidade da nave
         self.shield = 100
         self.energy = 100
-        self.image = nave_image
-        self.rect = self.image.get_rect()
         
+        self.image_direita = nave_image
+        self.image_esquerda = pygame.transform.flip(nave_image, True, False)
+        self.image=self.image_direita
+        self.rect = self.image.get_rect()
+        self.direction = True
+
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -54,9 +58,17 @@ class NaveEspacial(pygame.sprite.Sprite):
         # movimentacao
         if keys[K_LEFT]:
             self.position.x -= self.speed
+            self.direction = False
+
         if keys[K_RIGHT]:
             self.position.x += self.speed
-        
+            self.direction = True
+
+        if self.direction:
+            self.image = self.image_direita
+        else:
+            self.image = self.image_esquerda
+
 
         # atualiza a posicao do retangulo da nave
         self.rect.center = self.position
