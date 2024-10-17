@@ -25,6 +25,13 @@ color_transition = [
     (173, 216, 230)  # Light Blue
 ]
 
+
+class Floor(pygame.sprite.Sprite):
+    def __init__(self,name):
+        super(Floor,self).__init__()
+        self.image = pygame.image.load('chao.png').convert_alpha()  # Carrega a imagem do chão
+        self.rect = self.image.get_rect(topleft=(0, 600))  #        
+
 def interpolate_color(color1, color2, factor):
     """ interpolates between two colors based on a factor between 0 and 1."""
     return (
@@ -113,7 +120,7 @@ def main():
     transition_duration = 5000  #duracao da cor
     last_transition_time = pygame.time.get_ticks()
     transition_factor = 0
-
+    floor = Floor("Chão")
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -157,7 +164,8 @@ def main():
         else:
             current_color = color_transition[-1]
 
-       
+        if current_color == (173, 216, 230):
+            screen.blit(floor.image, floor.rect)  # Desenha o chão
         screen.fill(current_color)
         
         all_sprites.draw(screen)
