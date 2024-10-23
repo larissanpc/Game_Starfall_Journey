@@ -13,7 +13,7 @@ screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Starfall Journey')
 
-nave_image = pygame.image.load('maninhoV1.png')
+nave_image = pygame.image.load('maninhoV2.png')
 nave_image = pygame.transform.scale(nave_image,(60,70))
 
 color_transition = [
