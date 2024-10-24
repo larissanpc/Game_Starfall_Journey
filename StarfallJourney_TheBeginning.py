@@ -20,7 +20,11 @@ chao_image = pygame.image.load('chao.png')
 chao_image = pygame.transform.scale(chao_image, (screen_width, 100))  # ajusta o chão para a largura da tela
 
 color_transition = [
-     # Light Sky Blue
+    (0, 0, 128),     # Navy Blue
+    (75, 0, 130),    # Indigo
+    (123, 104, 238), # Medium Slate Blue
+    (30, 144, 255),  # Dodger Blue
+    (135, 206, 250),# Light Sky Blue
     (173, 216, 230)  # Light Blue (cor mais clara)
 ]
 
