@@ -1,4 +1,5 @@
 import math
+import button
 import pygame
 from sys import exit
 from random import *
@@ -13,10 +14,13 @@ screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Starfall Journey')
 
+#definindo as fontes e cores
+font = pygame.font.SysFont("arialblack", 40)
+TEXT_COL = (255,255,255)
+
+# Imagens
 nave_image = pygame.image.load('maninhoV2.png')
-
 nave_image = pygame.transform.scale(nave_image, (60, 70))
-
 chao_image = pygame.image.load('chao.png')
 chao_image = pygame.transform.scale(chao_image, (screen_width, 100))  # ajusta o chão para a largura da tela
 predio_image=pygame.image.load('predio.png')
@@ -119,6 +123,9 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
+    #Game Variables
+    game_paused = False
+
     # controle time criação asteroides
     last_asteroid_time = pygame.time.get_ticks()
     asteroid_delay = 2000  # intervalo entre asteroides
@@ -147,8 +154,15 @@ def main():
     pomtos=0
     while running:
         for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    print("Pause")
+                    game_paused = not(game_paused)
             if event.type == QUIT:
                 running = False
+
+        if game_paused:
+            
                 
         keys = pygame.key.get_pressed()
 
