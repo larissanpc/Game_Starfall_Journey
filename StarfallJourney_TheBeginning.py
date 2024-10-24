@@ -19,15 +19,17 @@ nave_image = pygame.transform.scale(nave_image, (60, 70))
 
 chao_image = pygame.image.load('chao.png')
 chao_image = pygame.transform.scale(chao_image, (screen_width, 100))  # ajusta o chão para a largura da tela
+predio_image=pygame.image.load('predio.png')
+predio_image = pygame.transform.scale(predio_image, (272, 320))  # ajusta o chão para a largura da tela
 
 nave_image = pygame.transform.scale(nave_image,(60,70))
 
 color_transition = [
-    (0, 0, 128),     # Navy Blue
-    (75, 0, 130),    # Indigo
-    (123, 104, 238), # Medium Slate Blue
+    #(0, 0, 128),     # Navy Blue
+    #(75, 0, 130),    # Indigo
+    #(123, 104, 238), # Medium Slate Blue
     (30, 144, 255),  # Dodger Blue
-    (135, 206, 250),# Light Sky Blue
+    (135, 206, 250), # Light Sky Blue
     (173, 216, 230)  # Light Blue (cor mais clara)
 ]
 
@@ -56,32 +58,35 @@ class NaveEspacial(pygame.sprite.Sprite):
         self.image = self.image_direita
         self.rect = self.image.get_rect()
         self.direction = True
+        self.pause= False
 
+        
     def update(self):
         keys = pygame.key.get_pressed()
-
+        if self.pause==False:
         # movimentacao
-        if keys[K_LEFT]:
-            self.position.x -= self.speed
-            self.direction = False
+            if keys[K_LEFT]:
+                self.position.x -= self.speed
+                self.direction = False
 
-        if keys[K_RIGHT]:
-            self.position.x += self.speed
-            self.direction = True
+            if keys[K_RIGHT]:
+                self.position.x += self.speed
+                self.direction = True
 
-        if self.direction:
-            self.image = self.image_direita
-        else:
-            self.image = self.image_esquerda
+            if self.direction:
+                self.image = self.image_direita
+            else:
+                self.image = self.image_esquerda
 
-        # atualiza a posicao do retangulo da nave
-        self.rect.center = self.position
+            # atualiza a posicao do retangulo da nave
+            self.rect.center = self.position
 
     def descer(self, chao_y):
         """Desce a nave suavemente até tocar o chão"""
         if self.position.y < chao_y + 15:  # ajusta para o topo da nave tocar o chão
             self.position.y += 1  # ajusta a velocidade de descida
-            return False  # ainda não chegou ao chão
+            return False
+        self.pause=True# ainda não chegou ao chão
         return True  # chegou ao chão
 
 
@@ -130,11 +135,16 @@ def main():
     # variáveis para controlar o chão
     chao_visible = False
     chao_y = screen_height  # começar fora da tela
-    chao_speed = 1  # velocidade suave para o chão subir
+    chao_speed = 0.875  # velocidade suave para o chão subir
     chao_fixo = False  # controlar se o chão parou de se mover
+    predio_visible=False
+    predioy=screen_height
+    prediospeed=0.9
+    prediofixo=False
     restart_timer = 0  # temporizador para reiniciar
     restart_delay = 5000  # tempo antes de reiniciar em milissegundos
-
+    asteroide_pause=False
+    pomtos=0
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -144,12 +154,13 @@ def main():
 
         # colisões
         collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
-
+        if(collided_asteroids):
+            pomtos+=1
         all_sprites.update()
 
         # tempo controlado
         current_time = pygame.time.get_ticks()
-        if current_time - last_asteroid_time > asteroid_delay:
+        if current_time - last_asteroid_time > asteroid_delay and asteroide_pause==False:
             pos_x = randrange(0, screen_width)
             asteroide = Asteroide(pos_x, screen_height)
             all_sprites.add(asteroide)
@@ -180,6 +191,9 @@ def main():
         # Ativa o chão apenas quando a cor mais clara for alcançada (Light Blue)
         if transition_index == len(color_transition) - 1:
             chao_visible = True
+        
+        if transition_index == len(color_transition) - 2:
+            predio_visible = True
 
         # movimentação do fundo (rolling screen)
         background_y += background_speed
@@ -190,20 +204,32 @@ def main():
         screen.fill(current_color)
         pygame.draw.rect(screen, current_color, (0, background_y - screen_height, screen_width, screen_height))
         pygame.draw.rect(screen, current_color, (0, background_y, screen_width, screen_height))
-
+        if predio_visible:
+            if predioy > screen_height - 370:
+                predioy -= prediospeed
+            else:
+                prediofixo=True
+            screen.blit(predio_image,(0,predioy))
         # desenhar o chão se visível
         if chao_visible:
+            asteroide_pause=True
             if chao_y > screen_height - 100:  # posição final do chão (tamanho da imagem)
                 chao_y -= chao_speed  # fazer o chão subir lentamente
             else:
                 chao_fixo = True  # chão parou de se mover quando alcança sua posição final
             screen.blit(chao_image, (0, chao_y))
-
+        
         # Se o chão está fixo, faz a nave descer lentamente até o chão
         if chao_fixo:
             if nave.descer(chao_y):  # verifica se a nave chegou ao chão
                 restart_timer += clock.get_time()  # incrementa o temporizador
                 if restart_timer >= restart_delay:  # se passaram 5 segundos
+                    nave.pause=False
+                    asteroide_pause=True
+                    distancia=nave.position.x-screen_width/2
+                    distancia/=100
+                    print(pomtos)
+                    pomtos=0
                     main()  # reinicia o jogo
 
         # desenhar todos os sprites
