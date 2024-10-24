@@ -13,27 +13,19 @@ screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Starfall Journey')
 
-nave_image = pygame.image.load('maninhoV1.png')
-nave_image = pygame.transform.scale(nave_image,(60,70))
+nave_image = pygame.image.load('maninhoV2.png')
+nave_image = pygame.transform.scale(nave_image, (60, 70))
+
+chao_image = pygame.image.load('chao.png')
+chao_image = pygame.transform.scale(chao_image, (screen_width, 100))  # ajusta o chão para a largura da tela
 
 color_transition = [
-    (0, 0, 128),     # Navy Blue
-    (75, 0, 130),    # Indigo
-    (123, 104, 238), # Medium Slate Blue
-    (30, 144, 255),  # Dodger Blue
-    (135, 206, 250), # Light Sky Blue
-    (173, 216, 230)  # Light Blue
+     # Light Sky Blue
+    (173, 216, 230)  # Light Blue (cor mais clara)
 ]
 
-
-class Floor(pygame.sprite.Sprite):
-    def __init__(self,name):
-        super(Floor,self).__init__()
-        self.image = pygame.image.load('chao.png').convert_alpha()  # Carrega a imagem do chão
-        self.rect = self.image.get_rect(topleft=(0, 600))  #        
-
 def interpolate_color(color1, color2, factor):
-    """ interpolates between two colors based on a factor between 0 and 1."""
+    """ Interpolates between two colors based on a factor between 0 and 1."""
     return (
         int(color1[0] + (color2[0] - color1[0]) * factor),
         int(color1[1] + (color2[1] - color1[1]) * factor),
@@ -54,10 +46,9 @@ class NaveEspacial(pygame.sprite.Sprite):
         
         self.image_direita = nave_image
         self.image_esquerda = pygame.transform.flip(nave_image, True, False)
-        self.image=self.image_direita
+        self.image = self.image_direita
         self.rect = self.image.get_rect()
         self.direction = True
-
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -76,13 +67,17 @@ class NaveEspacial(pygame.sprite.Sprite):
         else:
             self.image = self.image_esquerda
 
-
         # atualiza a posicao do retangulo da nave
         self.rect.center = self.position
 
- 
+    def descer(self, chao_y):
+        """Desce a nave suavemente até tocar o chão"""
+        if self.position.y < chao_y + 15:  # ajusta para o topo da nave tocar o chão
+            self.position.y += 1  # ajusta a velocidade de descida
+            return False  # ainda não chegou ao chão
+        return True  # chegou ao chão
 
-# classe asteroide
+
 class Asteroide(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super(Asteroide, self).__init__()
@@ -112,15 +107,27 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
-    #controle time criação asteroides
+    # controle time criação asteroides
     last_asteroid_time = pygame.time.get_ticks()
-    asteroid_delay = 2000  #intervalo entre asteroides
+    asteroid_delay = 2000  # intervalo entre asteroides
 
     transition_index = 0
-    transition_duration = 5000  #duracao da cor
+    transition_duration = 5000  # duracao da cor
     last_transition_time = pygame.time.get_ticks()
     transition_factor = 0
-    floor = Floor("Chão")
+
+    # variavel de deslocamento da tela
+    background_y = 0
+    background_speed = 2  # velocidade do movimento de fundo
+
+    # variáveis para controlar o chão
+    chao_visible = False
+    chao_y = screen_height  # começar fora da tela
+    chao_speed = 1  # velocidade suave para o chão subir
+    chao_fixo = False  # controlar se o chão parou de se mover
+    restart_timer = 0  # temporizador para reiniciar
+    restart_delay = 5000  # tempo antes de reiniciar em milissegundos
+
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -128,10 +135,10 @@ def main():
                 
         keys = pygame.key.get_pressed()
 
+        # colisões
         collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
 
         all_sprites.update()
-
 
         # tempo controlado
         current_time = pygame.time.get_ticks()
@@ -142,8 +149,7 @@ def main():
             asteroides.add(asteroide)
             last_asteroid_time = current_time  # att tempo
 
-        #screen.fill((0, 0, 0))  # preenche o fundo de preto
-
+        # controle da transição de cores
         if transition_index < len(color_transition) - 1:
             if current_time - last_transition_time > transition_duration:
                 last_transition_time = current_time
@@ -164,10 +170,36 @@ def main():
         else:
             current_color = color_transition[-1]
 
-        if current_color == (173, 216, 230):
-            screen.blit(floor.image, floor.rect)  # Desenha o chão
+        # Ativa o chão apenas quando a cor mais clara for alcançada (Light Blue)
+        if transition_index == len(color_transition) - 1:
+            chao_visible = True
+
+        # movimentação do fundo (rolling screen)
+        background_y += background_speed
+        if background_y >= screen_height:
+            background_y = 0
+
+        # desenhar o fundo rolando
         screen.fill(current_color)
-        
+        pygame.draw.rect(screen, current_color, (0, background_y - screen_height, screen_width, screen_height))
+        pygame.draw.rect(screen, current_color, (0, background_y, screen_width, screen_height))
+
+        # desenhar o chão se visível
+        if chao_visible:
+            if chao_y > screen_height - 100:  # posição final do chão (tamanho da imagem)
+                chao_y -= chao_speed  # fazer o chão subir lentamente
+            else:
+                chao_fixo = True  # chão parou de se mover quando alcança sua posição final
+            screen.blit(chao_image, (0, chao_y))
+
+        # Se o chão está fixo, faz a nave descer lentamente até o chão
+        if chao_fixo:
+            if nave.descer(chao_y):  # verifica se a nave chegou ao chão
+                restart_timer += clock.get_time()  # incrementa o temporizador
+                if restart_timer >= restart_delay:  # se passaram 5 segundos
+                    main()  # reinicia o jogo
+
+        # desenhar todos os sprites
         all_sprites.draw(screen)
 
         pygame.display.flip()
