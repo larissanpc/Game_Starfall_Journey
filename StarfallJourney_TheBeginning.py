@@ -14,10 +14,13 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Starfall Journey')
 
 nave_image = pygame.image.load('maninhoV2.png')
+
 nave_image = pygame.transform.scale(nave_image, (60, 70))
 
 chao_image = pygame.image.load('chao.png')
 chao_image = pygame.transform.scale(chao_image, (screen_width, 100))  # ajusta o chão para a largura da tela
+
+nave_image = pygame.transform.scale(nave_image,(60,70))
 
 color_transition = [
     (0, 0, 128),     # Navy Blue
