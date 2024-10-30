@@ -14,6 +14,7 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Starfall Journey')
 
 nave_image = pygame.image.load('maninhoV2.png')
+collision_star_sound = pygame.mixer.Sound("coin_flip.wav")
 
 nave_image = pygame.transform.scale(nave_image, (60, 70))
 
@@ -155,6 +156,7 @@ def main():
         # colisões
         collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
         if(collided_asteroids):
+            collision_star_sound.play()
             pomtos+=1
         all_sprites.update()
 
