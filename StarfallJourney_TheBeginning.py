@@ -6,6 +6,8 @@ from pygame.locals import*
 
 # inicialização pygame
 pygame.init()
+pygame.font.init()
+font = pygame.font.Font(None, 36)  # Você pode ajustar o tamanho da fonte
 
 # config da tela
 screen_width = 800
@@ -224,18 +226,22 @@ def main():
         # Se o chão está fixo, faz a nave descer lentamente até o chão
         if chao_fixo:
             if nave.descer(chao_y):  # verifica se a nave chegou ao chão
-                restart_timer += clock.get_time()  # incrementa o temporizador
+                restart_timer += clock.get_time()
+                distancia=nave.position.x-screen_width/2
+                distancia/=100
+                pontos_distancia = font.render(f'Distancia: {distancia}', True, (255, 255, 255))  # Texto branco
+                screen.blit(pontos_distancia, (screen_height/2, screen_width/2))  # Desenha no canto superior esquerdo
+
                 if restart_timer >= restart_delay:  # se passaram 5 segundos
                     nave.pause=False
                     asteroide_pause=True
-                    distancia=nave.position.x-screen_width/2
-                    distancia/=100
-                    print(pomtos)
                     pomtos=0
                     main()  # reinicia o jogo
 
         # desenhar todos os sprites
         all_sprites.draw(screen)
+        pontos_texto = font.render(f'Pontos: {pomtos}', True, (255, 255, 255))  # Texto branco
+        screen.blit(pontos_texto, (10, 10))  # Desenha no canto superior esquerdo
 
         pygame.display.flip()
         clock.tick(60)
