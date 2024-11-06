@@ -24,17 +24,15 @@ chao_image = pygame.image.load('chao.png')
 chao_image = pygame.transform.scale(chao_image, (screen_width, 100))  # ajusta o chão para a largura da tela
 predio_image=pygame.image.load('predio.png')
 predio_image = pygame.transform.scale(predio_image, (272, 320))  # ajusta o chão para a largura da tela
+starfall_image = pygame.image.load('starfall.png')  # A imagem de fundo do menu
+starfall_image = pygame.transform.scale(starfall_image, (screen_width, screen_height))  # Ajusta o tamanho do fundo
+
+# Fonte para os botões
+option_font = pygame.font.Font(None, 48)
 
 nave_image = pygame.transform.scale(nave_image,(60,70))
 
-color_transition = [
-    #(0, 0, 128),     # Navy Blue
-    #(75, 0, 130),    # Indigo
-    #(123, 104, 238), # Medium Slate Blue
-    (30, 144, 255),  # Dodger Blue
-    (135, 206, 250), # Light Sky Blue
-    (173, 216, 230)  # Light Blue (cor mais clara)
-]
+color_transition = []
 
 def interpolate_color(color1, color2, factor):
     """ Interpolates between two colors based on a factor between 0 and 1."""
@@ -110,12 +108,43 @@ class Asteroide(pygame.sprite.Sprite):
         #remove o asteroide
         if self.position.y < 0:
             self.kill()
+class AsteroideDoMal(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(AsteroideDoMal, self).__init__()
+        self.position = pygame.math.Vector2(x, y)
+        self.speed = 5
+        sla=randrange(0,2)
+        self.image = pygame.image.load('bomba.png')
+        self.image = pygame.transform.scale(self.image, (30, 30))
+
+        self.image_direita = self.image
+        self.image_esquerda = pygame.transform.flip(self.image, True, False)
+
+        if(sla==0):
+            self.speedx = 5
+            self.image=self.image_direita
+        else:
+            self.speedx = -5
+            self.image=self.image_esquerda
+        
+        self.rect = self.image.get_rect()
+        self.rect.center = self.position
+
+    def update(self):
+        self.position.y -= self.speed
+        self.position.x+=self.speedx
+
+        self.rect.center = self.position
+        #remove o asteroide
+        if self.position.y < 0:
+            self.kill()
 
 # funcao principal do jogo
-def main():
+def main(color_transition):
     nave = NaveEspacial("Nave 1")
     all_sprites = pygame.sprite.Group()
     asteroides = pygame.sprite.Group()
+    asteroidesDosMais = pygame.sprite.Group()
 
     all_sprites.add(nave)
     
@@ -160,15 +189,25 @@ def main():
         if(collided_asteroids):
             collision_star_sound.play()
             pomtos+=1
+        collided_asteroidsDosMais = pygame.sprite.spritecollide(nave, asteroidesDosMais, True)
+        if(collided_asteroidsDosMais):
+            collision_star_sound.play()
+            pomtos-=1
+
         all_sprites.update()
 
         # tempo controlado
         current_time = pygame.time.get_ticks()
         if current_time - last_asteroid_time > asteroid_delay and asteroide_pause==False:
             pos_x = randrange(0, screen_width)
+            pos_xMal= randrange(0, screen_width)
+
             asteroide = Asteroide(pos_x, screen_height)
+            asteroideDoMal=AsteroideDoMal(pos_xMal,screen_height)
             all_sprites.add(asteroide)
             asteroides.add(asteroide)
+            all_sprites.add(asteroideDoMal)
+            asteroidesDosMais.add(asteroideDoMal)
             last_asteroid_time = current_time  # att tempo
 
         # controle da transição de cores
@@ -229,6 +268,8 @@ def main():
                 restart_timer += clock.get_time()
                 distancia=nave.position.x-screen_width/2
                 distancia/=100
+                if(distancia<=0):
+                    distancia*=-1
                 pontos_distancia = font.render(f'Distancia: {distancia}', True, (255, 255, 255))  # Texto branco
                 screen.blit(pontos_distancia, (screen_height/2, screen_width/2))  # Desenha no canto superior esquerdo
 
@@ -236,7 +277,7 @@ def main():
                     nave.pause=False
                     asteroide_pause=True
                     pomtos=0
-                    main()  # reinicia o jogo
+                    menu()  # reinicia o jogo
 
         # desenhar todos os sprites
         all_sprites.draw(screen)
@@ -247,6 +288,91 @@ def main():
         clock.tick(60)
 
     pygame.quit()
+def menu():
+    """Tela principal de menu com as opções de iniciar ou sair"""
+    menu_running = True
+    selected_option = 0  # 0 = 'Iniciar', 1 = 'Sair'
+    
+    while menu_running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                menu_running = False
+                pygame.quit()
+                exit()
 
+            # Navegação com as teclas
+            if event.type == KEYDOWN:
+                if event.key == K_DOWN:
+                    selected_option = (selected_option + 1) % 3  # Alterna entre 0 e 1 (Iniciar ou Sair)
+                elif event.key == K_UP:
+                    selected_option = (selected_option - 1) % 3  # Alterna entre 0 e 1
+                elif event.key == K_RETURN:
+                    if selected_option == 0:
+                        color_transition = [
+                            #(0, 0, 128),     # Navy Blue
+                            #(75, 0, 130),    # Indigo
+                            #(123, 104, 238), # Medium Slate Blue
+                            (30, 144, 255),  # Dodger Blue
+                            (135, 206, 250), # Light Sky Blue
+                            (173, 216, 230)  # Light Blue (cor mais clara)
+                        ]
+                        main(color_transition)  # Inicia o jogo facil
+                    elif selected_option == 1:
+                        color_transition = [
+                            #(0, 0, 128),     # Navy Blue
+                            (75, 0, 130),    # Indigo
+                            (123, 104, 238), # Medium Slate Blue
+                            (30, 144, 255),  # Dodger Blue
+                            (135, 206, 250), # Light Sky Blue
+                            (173, 216, 230)  # Light Blue (cor mais clara)
+                        ]
+                        main(color_transition)  # Inicia o jogo medio
+                    elif selected_option == 2:
+                        color_transition = [
+                            (0,0,0),
+                            (0, 0, 128),     # Navy Blue
+                            (75, 0, 130),    # Indigo
+                            (123, 104, 238), # Medium Slate Blue
+                            (30, 144, 255),  # Dodger Blue
+                            (135, 206, 250), # Light Sky Blue
+                            (173, 216, 230)  # Light Blue (cor mais clara)
+                        ]
+                        main(color_transition)  # Inicia o jogo dificil
+                    elif selected_option == 3:
+                        pygame.quit()  # Inicia o jogo medio
+                        exit()
+
+        # Desenha o fundo com a imagem 'starfall.png'
+        screen.blit(starfall_image, (0, 0))  # Desenha a imagem do fundo na tela
+
+        # Desenha as opções do menu
+        easy_text = option_font.render("Fácil", True, (255, 255, 255))  # Opção 'Iniciar' em branco
+        medium_text = option_font.render("Médio", True, (255, 255, 255))  # Opção 'Iniciar' em branco
+        hard_text = option_font.render("Difícil", True, (255, 255, 255))  # Opção 'Iniciar' em branco
+
+        quit_text = option_font.render("Sair", True, (255, 255, 255))  # Opção 'Sair' em branco
+
+        # Destaca a opção selecionada
+        if selected_option == 0:
+            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - easy_text.get_width() // 2 - 10, screen_height // 2 - 70, easy_text.get_width() + 20, easy_text.get_height() + 10), 3)
+        if selected_option == 1:
+            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - medium_text.get_width() // 2 - 10, screen_height // 2 + 10, medium_text.get_width() + 20, medium_text.get_height() + 10), 3)
+        if selected_option == 2:
+            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - hard_text.get_width() // 2 - 10, screen_height // 2 + 90, hard_text.get_width() + 20, hard_text.get_height() + 10), 3)
+
+        if selected_option == 3:
+            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - quit_text.get_width() // 2 - 10, screen_height // 2 + 30, quit_text.get_width() + 20, quit_text.get_height() + 10), 3)
+
+        # Exibe as opções
+        screen.blit(easy_text, (screen_width // 2 - easy_text.get_width() // 2, screen_height // 2 - 70))
+        screen.blit(medium_text, (screen_width // 2 - medium_text.get_width() // 2, screen_height // 2 + 10))
+        screen.blit(hard_text, (screen_width // 2 - hard_text.get_width() // 2, screen_height // 2 + 90))
+
+        #screen.blit(quit_text, (screen_width // 2 - quit_text.get_width() // 2, screen_height // 2 + 30))
+
+        pygame.display.flip()  # Atualiza a tela
+        pygame.time.Clock().tick(60)  # Limita a taxa de quadros para 60 FPS
+
+# Chama o menu
 if __name__ == "__main__":
-    main()
+    menu()  # Inicia o menu principal
