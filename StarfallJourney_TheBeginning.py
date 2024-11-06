@@ -12,11 +12,15 @@ pygame.init()
 screen_width = 800
 screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
+surface = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
 pygame.display.set_caption('Starfall Journey')
 
 #definindo as fontes e cores
 font = pygame.font.SysFont("arialblack", 40)
 TEXT_COL = (255,255,255)
+
+
+game_paused= False
 
 # Imagens
 nave_image = pygame.image.load('maninhoV2.png')
@@ -44,6 +48,12 @@ def interpolate_color(color1, color2, factor):
         int(color1[1] + (color2[1] - color1[1]) * factor),
         int(color1[2] + (color2[2] - color1[2]) * factor)
     )
+
+
+def draw_pause():
+    pygame.draw.rect(surface, (128,128,128, 255), [0, 0, screen_width, screen_height] )
+    
+    screen.blit(surface, (0,0))
 
 
 class NaveEspacial(pygame.sprite.Sprite):
@@ -153,104 +163,107 @@ def main():
     asteroide_pause=False
     pomtos=0
     while running:
+        if game_paused:
+            draw_pause()
+
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    print("Pause")
-                    game_paused = not(game_paused)
+                if event.key == pygame.K_ESCAPE:
+                    if game_paused:
+                        game_paused = False
+                    else:
+                        game_paused = True
             if event.type == QUIT:
                 running = False
 
-        if game_paused:
-            
-                
         keys = pygame.key.get_pressed()
 
-        # colisões
-        collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
-        if(collided_asteroids):
-            pomtos+=1
-        all_sprites.update()
+        if not game_paused:
+            # colisões
+            collided_asteroids = pygame.sprite.spritecollide(nave, asteroides, True)
+            if(collided_asteroids):
+                pomtos+=1
+            all_sprites.update()
 
-        # tempo controlado
-        current_time = pygame.time.get_ticks()
-        if current_time - last_asteroid_time > asteroid_delay and asteroide_pause==False:
-            pos_x = randrange(0, screen_width)
-            asteroide = Asteroide(pos_x, screen_height)
-            all_sprites.add(asteroide)
-            asteroides.add(asteroide)
-            last_asteroid_time = current_time  # att tempo
+            # tempo controlado
+            current_time = pygame.time.get_ticks()
+            if current_time - last_asteroid_time > asteroid_delay and asteroide_pause==False:
+                pos_x = randrange(0, screen_width)
+                asteroide = Asteroide(pos_x, screen_height)
+                all_sprites.add(asteroide)
+                asteroides.add(asteroide)
+                last_asteroid_time = current_time  # att tempo
 
-        # controle da transição de cores
-        if transition_index < len(color_transition) - 1:
-            if current_time - last_transition_time > transition_duration:
-                last_transition_time = current_time
-                transition_index += 1
-                transition_factor = 0
+            # controle da transição de cores
+            if transition_index < len(color_transition) - 1:
+                if current_time - last_transition_time > transition_duration:
+                    last_transition_time = current_time
+                    transition_index += 1
+                    transition_factor = 0
 
-            transition_factor += clock.get_time() / transition_duration
-            if transition_factor > 1:
-                transition_factor = 1
+                transition_factor += clock.get_time() / transition_duration
+                if transition_factor > 1:
+                    transition_factor = 1
 
-            next_color_index = min(transition_index + 1, len(color_transition) - 1)
+                next_color_index = min(transition_index + 1, len(color_transition) - 1)
 
-            current_color = interpolate_color(
-                color_transition[transition_index], 
-                color_transition[next_color_index], 
-                transition_factor
-            )
-        else:
-            current_color = color_transition[-1]
-
-        # Ativa o chão apenas quando a cor mais clara for alcançada (Light Blue)
-        if transition_index == len(color_transition) - 1:
-            chao_visible = True
-        
-        if transition_index == len(color_transition) - 2:
-            predio_visible = True
-
-        # movimentação do fundo (rolling screen)
-        background_y += background_speed
-        if background_y >= screen_height:
-            background_y = 0
-
-        # desenhar o fundo rolando
-        screen.fill(current_color)
-        pygame.draw.rect(screen, current_color, (0, background_y - screen_height, screen_width, screen_height))
-        pygame.draw.rect(screen, current_color, (0, background_y, screen_width, screen_height))
-        if predio_visible:
-            if predioy > screen_height - 370:
-                predioy -= prediospeed
+                current_color = interpolate_color(
+                    color_transition[transition_index], 
+                    color_transition[next_color_index], 
+                    transition_factor
+                )
             else:
-                prediofixo=True
-            screen.blit(predio_image,(0,predioy))
-        # desenhar o chão se visível
-        if chao_visible:
-            asteroide_pause=True
-            if chao_y > screen_height - 100:  # posição final do chão (tamanho da imagem)
-                chao_y -= chao_speed  # fazer o chão subir lentamente
-            else:
-                chao_fixo = True  # chão parou de se mover quando alcança sua posição final
-            screen.blit(chao_image, (0, chao_y))
-        
-        # Se o chão está fixo, faz a nave descer lentamente até o chão
-        if chao_fixo:
-            if nave.descer(chao_y):  # verifica se a nave chegou ao chão
-                restart_timer += clock.get_time()  # incrementa o temporizador
-                if restart_timer >= restart_delay:  # se passaram 5 segundos
-                    nave.pause=False
-                    asteroide_pause=True
-                    distancia=nave.position.x-screen_width/2
-                    distancia/=100
-                    print(pomtos)
-                    pomtos=0
-                    main()  # reinicia o jogo
+                current_color = color_transition[-1]
 
-        # desenhar todos os sprites
-        all_sprites.draw(screen)
+            # Ativa o chão apenas quando a cor mais clara for alcançada (Light Blue)
+            if transition_index == len(color_transition) - 1:
+                chao_visible = True
+            
+            if transition_index == len(color_transition) - 2:
+                predio_visible = True
 
-        pygame.display.flip()
-        clock.tick(60)
+            # movimentação do fundo (rolling screen)
+            background_y += background_speed
+            if background_y >= screen_height:
+                background_y = 0
+
+            # desenhar o fundo rolando
+            screen.fill(current_color)
+            pygame.draw.rect(screen, current_color, (0, background_y - screen_height, screen_width, screen_height))
+            pygame.draw.rect(screen, current_color, (0, background_y, screen_width, screen_height))
+            if predio_visible:
+                if predioy > screen_height - 370:
+                    predioy -= prediospeed
+                else:
+                    prediofixo=True
+                screen.blit(predio_image,(0,predioy))
+            # desenhar o chão se visível
+            if chao_visible:
+                asteroide_pause=True
+                if chao_y > screen_height - 100:  # posição final do chão (tamanho da imagem)
+                    chao_y -= chao_speed  # fazer o chão subir lentamente
+                else:
+                    chao_fixo = True  # chão parou de se mover quando alcança sua posição final
+                screen.blit(chao_image, (0, chao_y))
+            
+            # Se o chão está fixo, faz a nave descer lentamente até o chão
+            if chao_fixo:
+                if nave.descer(chao_y):  # verifica se a nave chegou ao chão
+                    restart_timer += clock.get_time()  # incrementa o temporizador
+                    if restart_timer >= restart_delay:  # se passaram 5 segundos
+                        nave.pause=False
+                        asteroide_pause=True
+                        distancia=nave.position.x-screen_width/2
+                        distancia/=100
+                        print(pomtos)
+                        pomtos=0
+                        main()  # reinicia o jogo
+
+            # desenhar todos os sprites
+            all_sprites.draw(screen)
+
+            pygame.display.flip()
+            clock.tick(60)
 
     pygame.quit()
 
