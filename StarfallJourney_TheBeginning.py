@@ -188,7 +188,7 @@ def main(color_transition):
     transition_duration = 5000  # duracao da cor
     last_transition_time = pygame.time.get_ticks()
     transition_factor = 0
-    vida=3
+    vida=99
     # variavel de deslocamento da tela
     background_y = 0
     background_speed = 2  # velocidade do movimento de fundo
@@ -222,7 +222,7 @@ def main(color_transition):
         collided_asteroidsDosMais = pygame.sprite.spritecollide(nave, asteroidesDosMais, True)
         if(collided_asteroidsDosMais) and vida>0:
             collision_star_sound.play()
-            vida-=1
+            pomtos-=10
 
         all_sprites.update()
 
