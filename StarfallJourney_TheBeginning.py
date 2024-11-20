@@ -339,10 +339,30 @@ def main(color_transition):
 
     pygame.quit()
 def menu():
-    """Tela principal de menu com as opções de iniciar ou sair"""
+    """Tela principal de menu com botões de imagem"""
     menu_running = True
-    selected_option = 0  # 0 = 'Iniciar', 1 = 'Sair'
-    
+    selected_option = 0  # 0 = 'Fácil', 1 = 'Médio', 2 = 'Difícil', 3 = 'Sair'
+
+    # Carregando as imagens dos botões
+    buttons = [
+        pygame.image.load('Botoes_Menu/facil_button.png'),
+        pygame.image.load('Botoes_Menu/medio_button.png'),
+        pygame.image.load('Botoes_Menu/dificil_button.png'),
+        pygame.image.load('Botoes_Menu/sair_button.png')
+    ]
+
+    # Ajustando o tamanho dos botões (opcional)
+    button_size = (200, 50)
+    buttons = [pygame.transform.scale(button, button_size) for button in buttons]
+
+    # Posições dos botões
+    button_positions = [
+        (screen_width // 2 - button_size[0] // 2, 200),
+        (screen_width // 2 - button_size[0] // 2, 280),
+        (screen_width // 2 - button_size[0] // 2, 360),
+        (screen_width // 2 - button_size[0] // 2, 520)
+    ]
+
     while menu_running:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -353,9 +373,9 @@ def menu():
             # Navegação com as teclas
             if event.type == KEYDOWN:
                 if event.key == K_DOWN:
-                    selected_option = (selected_option + 1) % 3  # Alterna entre 0 e 1 (Iniciar ou Sair)
+                    selected_option = (selected_option + 1) % 4
                 elif event.key == K_UP:
-                    selected_option = (selected_option - 1) % 3  # Alterna entre 0 e 1
+                    selected_option = (selected_option - 1) % 4
                 elif event.key == K_RETURN:
                     if selected_option == 0:
                         color_transition = [
@@ -369,7 +389,7 @@ def menu():
                             (173, 216, 230),  # Light Blue (cor mais clara)
                             (173, 216, 230)  # Light Blue (cor mais clara)
                         ]
-                        main(color_transition)  # Inicia o jogo facil
+                        main(color_transition)  # Inicia o jogo faci
                     elif selected_option == 1:
                         color_transition = [
                             #(0, 0, 128),     # Navy Blue
@@ -405,39 +425,29 @@ def menu():
                         ]
                         main(color_transition)  # Inicia o jogo dificil
                     elif selected_option == 3:
-                        pygame.quit()  # Inicia o jogo medio
+                        pygame.quit()
                         exit()
 
-        # Desenha o fundo com a imagem 'starfall.png'
-        screen.blit(starfall_image, (0, 0))  # Desenha a imagem do fundo na tela
+        # Desenha o fundo do menu
+        screen.blit(starfall_image, (0, 0))
 
-        # Desenha as opções do menu
-        easy_text = option_font.render("Fácil", True, (255, 255, 255))  # Opção 'Facil' em branco
-        medium_text = option_font.render("Médio", True, (255, 255, 255))  # Opção 'Medio' em branco
-        hard_text = option_font.render("Difícil", True, (255, 255, 255))  # Opção 'Dificil' em branco
+        # Desenhando os botões
+        for i, position in enumerate(button_positions):
+            if i == selected_option:
+                # Cria uma máscara a partir da superfície do botão
+                mask = pygame.mask.from_surface(buttons[i])
+                
+                # Obtendo os pontos do contorno da máscara e ajuste do contorno para a posição do botão na tela
+                outline = mask.outline()
+                outline = [(x + position[0], y + position[1]) for x, y in outline]
+                
+                pygame.draw.polygon(screen, (255, 255, 0), outline, 6)
+            
+            screen.blit(buttons[i], position)
 
-        quit_text = option_font.render("Sair", True, (255, 255, 255))  # Opção 'Sair' em branco
 
-        # Destaca a opção selecionada
-        if selected_option == 0:
-            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - easy_text.get_width() // 2 - 10, screen_height // 2 - 75, easy_text.get_width() + 20, easy_text.get_height() + 10), 3)
-        if selected_option == 1:
-            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - medium_text.get_width() // 2 - 10, screen_height // 2 + 5, medium_text.get_width() + 20, medium_text.get_height() + 10), 3)
-        if selected_option == 2:
-            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - hard_text.get_width() // 2 - 10, screen_height // 2 + 85, hard_text.get_width() + 20, hard_text.get_height() + 10), 3)
-
-        if selected_option == 3:
-            pygame.draw.rect(screen, (255, 255, 0), (screen_width // 2 - quit_text.get_width() // 2 - 10, screen_height // 2 + 25, quit_text.get_width() + 20, quit_text.get_height() + 10), 3)
-
-        # Exibe as opções
-        screen.blit(easy_text, (screen_width // 2 - easy_text.get_width() // 2, screen_height // 2 - 70))
-        screen.blit(medium_text, (screen_width // 2 - medium_text.get_width() // 2, screen_height // 2 + 10))
-        screen.blit(hard_text, (screen_width // 2 - hard_text.get_width() // 2, screen_height // 2 + 90))
-
-        #screen.blit(quit_text, (screen_width // 2 - quit_text.get_width() // 2, screen_height // 2 + 30))
-
-        pygame.display.flip()  # Atualiza a tela
-        pygame.time.Clock().tick(60)  # Limita a taxa de quadros para 60 FPS
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
 
 # Chama o menu
 if __name__ == "__main__":
