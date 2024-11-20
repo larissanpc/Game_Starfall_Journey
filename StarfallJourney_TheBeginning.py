@@ -17,6 +17,10 @@ pygame.display.set_caption('Starfall Journey')
 
 nave_image = pygame.image.load('maninhoV2.png')
 collision_star_sound = pygame.mixer.Sound("coin_flip.wav")
+musica = "musica.wav"
+pygame.mixer.music.load(musica)
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)
 
 nave_image = pygame.transform.scale(nave_image, (60, 70))
 
